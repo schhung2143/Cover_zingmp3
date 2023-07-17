@@ -42,16 +42,18 @@ const timeend = $('.music__playing-timeline-right')
 const heart = $('.music__play-song-action-heart');
 const randombtn = $('.music__playing-action-random');
 const repeatbtn = $('.music__playing-action-repeat');
+const nextbtn = $('.music__playing-action-next');
+const prevbtn = $('.music__playing-action-before');
 
 //-- list songs
 const app = {
     currentIndex: 0,
     isPlaying: false,
+    isRandom: false,
     songs: [
         {
             name: 'Đã Lỡ Yêu Em Nhiều',
             singer: 'JustaTee',
-            singer2: 'Phương Ly',
             music: './assest/music/daloyeu.mp3',
             img: './assest/img/daloyeu.jpg'
         },
@@ -66,6 +68,18 @@ const app = {
             singer: 'Erik',
             music: './assest/music/sautatca.mp3',
             img: './assest/img/sautatca.jpg'
+        },
+        {
+            name: 'Chẳng Thể Tìm Được Em',
+            singer: 'PhucXp ft. Freak D',
+            music: './assest/music/changthe.mp3',
+            img: './assest/img/changthetimdcem.jpg'
+        },
+        {
+            name: 'Mãi Mãi Không Phải Anh',
+            singer: 'Thanh Bình',
+            music: './assest/music/maimai.mp3',
+            img: './assest/img/maimaikolaanh.jpg'
         }
     ],
 
@@ -95,8 +109,8 @@ const app = {
             `
         })
         $('.category__recent-list').innerHTML = html.join('');
-        const lastsong = $('.category__recent-item:last-child');
-        lastsong.classList.add('category__recent-item-active')
+        const firstsong = $('.category__recent-item:first-child');
+        firstsong.classList.add('category__recent-item-active')
     },
 
     defineProperties: function() {
@@ -114,12 +128,6 @@ const app = {
         heart.onclick = function() {
             const openheart = $('.music__play-song-action-heart i');
             openheart.classList.toggle('heart-active')
-        }
-
-        //--action button random (nut ngau nhien)
-        randombtn.onclick = function() {
-            const openrandom = $('.music__playing-action-random i');
-            openrandom.classList.toggle('heart-active')
         }
 
         //--action button repeat (nut nghe lai)
@@ -149,6 +157,7 @@ const app = {
             player.classList.remove('playing');
         }
 
+
         //khi tien do bai hat thay doi
         audio.ontimeupdate = function() {
             if(audio.duration) {
@@ -175,6 +184,35 @@ const app = {
             const seektime = e.target.value/100 * audio.duration;
             audio.currentTime = seektime;
         }
+
+        //khi next song 
+        nextbtn.onclick = function() {
+            if(_this.isRandom) {
+                _this.randomSong();
+            } else {
+                _this.nextSong();
+            }
+            audio.play();
+            // $('.category__recent-item.category__recent-item-active').classList.remove('category__recent-item-active');
+            // let activesong = `.category__recent-item-active::nth-child(${this.currentIndex})`;
+            // $(activesong).classList.add('category__recent-item-active');
+        }
+
+        //khi prev song 
+        prevbtn.onclick = function() {
+            if(_this.isRandom) {
+                _this.randomSong();
+            } else {
+                _this.prevSong();
+            }
+            audio.play();
+        }
+
+        //khi bat/tat random
+        randombtn.onclick = function() {
+            _this.isRandom = !_this.isRandom;
+            randombtn.classList.toggle('heart-active');
+        }
     },
 
     loadCurentsong: function() {
@@ -182,6 +220,32 @@ const app = {
         songname.textContent = this.currentSong.name;
         songsinger.textContent = this.currentSong.singer;
         audio.src = this.currentSong.music;
+    },
+
+    nextSong: function() {
+        this.currentIndex++;
+        if(this.currentIndex >= this.songs.length) {
+            this.currentIndex = 0;
+        }
+        this.loadCurentsong();
+    },
+
+    prevSong: function() {
+        this.currentIndex--;
+        if(this.currentIndex < 0) {
+            this.currentIndex = this.songs.length-1;
+        }
+        this.loadCurentsong();
+    },
+
+    randomSong: function() {
+        let newIndex;
+        do {
+            newIndex = Math.floor(Math.random() * this.songs.length);
+        } while(newIndex === this.currentIndex);
+
+        this.currentIndex = newIndex;
+        this.loadCurentsong();
     },
 
     start: function() {
