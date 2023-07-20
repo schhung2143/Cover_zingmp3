@@ -31,7 +31,8 @@ items.forEach((item) => {
 //-- Playlist 
 const player = $('.music__play')
 const playing = $('.music__playing-action-play');
-const musicplay = $('.music__play');
+const playbtn = $('.category__recent-item-play');
+const playlist = $('.category__recent-list');
 const audio = $('.music_audio');
 const progress = $('.music__playing-progress');
 const songname = $('.music__play-song-info-name');
@@ -50,6 +51,8 @@ const app = {
     currentIndex: 0,
     isPlaying: false,
     isRandom: false,
+    isRepeat: false,
+    isheart: false,
     songs: [
         {
             name: 'Đã Lỡ Yêu Em Nhiều',
@@ -76,7 +79,7 @@ const app = {
             img: './assest/img/changthetimdcem.jpg'
         },
         {
-            name: 'Mãi Mãi Không Phải Anh',
+            name: 'Mãi mãi không phải anh',
             singer: 'Thanh Bình',
             music: './assest/music/maimai.mp3',
             img: './assest/img/maimaikolaanh.jpg'
@@ -84,12 +87,15 @@ const app = {
     ],
 
     render: function() {
-        const html = this.songs.map(song => {
+        const html = this.songs.map((song, index) => {
             return `
-            <li class="category__recent-item">
+            <li class="category__recent-item ${index === this.currentIndex ? 'category__recent-item-active' : ' '}" data-index = "${index}">
             <div class="category__recent-item-level">
                 <img src="${song.img}" alt="Anh" class="category__recent-item-img">
-                <i class="category__recent-item-level-play fa-solid fa-play"></i>
+                <div class="music__playing-action-play">
+                    <i class="category__recent-item-level-play fa-solid fa-play"></i>
+                    <i class="category__recent-item-level-pause fa-solid fa-pause"></i>
+                </div> 
                 <div class="category__recent-item-info">
                     <div class="category__recent-item-name">${song.name}</div>
                     <span class="category__recent-item-sings">
@@ -98,19 +104,17 @@ const app = {
                 </div>
             </div>
             <div class="category__recent-item-btn">
-                <div class="category__recent-item-btn-icon">
+                <div class="category__recent-item-btn-heart">
                     <i class="fa-solid fa-heart"></i>
                 </div>
-                <div class="category__recent-item-btn-icon">
+                <div class="category__recent-item-btn-menu">
                     <i class="fa-solid fa-ellipsis"></i>
                 </div>
             </div>
         </li>
             `
         })
-        $('.category__recent-list').innerHTML = html.join('');
-        const firstsong = $('.category__recent-item:first-child');
-        firstsong.classList.add('category__recent-item-active')
+        playlist.innerHTML = html.join('');
     },
 
     defineProperties: function() {
@@ -128,12 +132,6 @@ const app = {
         heart.onclick = function() {
             const openheart = $('.music__play-song-action-heart i');
             openheart.classList.toggle('heart-active')
-        }
-
-        //--action button repeat (nut nghe lai)
-        repeatbtn.onclick = function() {
-            const openrepeat = $('.music__playing-action-repeat i');
-            openrepeat.classList.toggle('heart-active')
         }
 
         //xu ly hanh dong click play
@@ -193,12 +191,10 @@ const app = {
                 _this.nextSong();
             }
             audio.play();
-            // $('.category__recent-item.category__recent-item-active').classList.remove('category__recent-item-active');
-            // let activesong = `.category__recent-item-active::nth-child(${this.currentIndex})`;
-            // $(activesong).classList.add('category__recent-item-active');
+            _this.render();
         }
 
-        //khi prev song 
+        // khi prev song 
         prevbtn.onclick = function() {
             if(_this.isRandom) {
                 _this.randomSong();
@@ -206,12 +202,51 @@ const app = {
                 _this.prevSong();
             }
             audio.play();
+            _this.render();
         }
 
-        //khi bat/tat random
+        // khi bat/tat random
         randombtn.onclick = function() {
             _this.isRandom = !_this.isRandom;
-            randombtn.classList.toggle('heart-active');
+            randombtn.classList.toggle("active", _this.isRandom);
+        }
+
+        // khi bat/tat repeat
+        repeatbtn.onclick = function() {
+            _this.isRepeat = !_this.isRepeat;
+            repeatbtn.classList.toggle("active", _this.isRepeat);
+        }
+
+        // khi ket thuc 1 song ended song
+        audio.onended = function() {
+            if(_this.isRepeat) {
+                audio.play();
+            } else {
+                nextbtn.click();
+            }
+        }
+
+        // hanh vi click vao songlist
+        playlist.onclick = function(e) {
+            const songNode = e.target.closest('.category__recent-item:not(.category__recent-item-active')
+            if(e.target.closest('.category__recent-item-btn-heart')) {
+                _this.isheart = !_this.isheart;
+                const tym = $('.category__recent-item-btn-heart');
+                e.target.classList.toggle('heart-active', _this.isheart);
+            }
+            
+            if(songNode && !e.target.closest('.category__recent-item-btn-heart') 
+                && !e.target.closest('.category__recent-item-btn-menu')
+                && !e.target.closest('.category__recent-item-sing')
+            ) {
+                // khi click vao song not active
+                if(songNode) {
+                    _this.currentIndex = Number(songNode.dataset.index);
+                    _this.loadCurentsong();
+                    _this.render();
+                    audio.play();
+                }
+            }
         }
     },
 
@@ -242,7 +277,7 @@ const app = {
         let newIndex;
         do {
             newIndex = Math.floor(Math.random() * this.songs.length);
-        } while(newIndex === this.currentIndex);
+        } while(newIndex === this.currentIndex)
 
         this.currentIndex = newIndex;
         this.loadCurentsong();
@@ -252,11 +287,11 @@ const app = {
         //dinh nghia cac thuoc tinh cho obj
         this.defineProperties();
 
-        //load currentsong (tai thong tin bai hat dau tien vao UI khi chay qpp)
-        this.loadCurentsong();
-
-        //lang nghe va xu ly cac su kies
+        //lang nghe va xu ly cac su kien
         this.handleEvents();
+
+        //load currentsong (tai thong tin bai hat dau tien vao UI khi chay)
+        this.loadCurentsong();
 
         //render lai playlist
         this.render();
