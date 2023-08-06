@@ -279,8 +279,7 @@ const app = {
         }
 
         //hanh dong click vao nut play o list song
-        const playbtn = $('.category__recent-item-play')
-        console.log(playbtn)
+        const playbtn = $('.category__recent-item-play')    
         // playbtn.onclick = function() {
         //     playing.click();
         // }
